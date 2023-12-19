@@ -29,7 +29,7 @@ def get_device_rssi(target_address):
     return rssi
 
 # Replace with the name of your Bluetooth device
-device_name = "Your_Device_Name"
+device_name = "WH-1000XM3"
 
 # Find the device by name
 device_address = find_device_address(device_name)
