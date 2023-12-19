@@ -1,45 +1,47 @@
 import bluetooth
+import bluetooth._bluetooth as bluez
+import struct
 import sys
-import time
 
-def find_device_address(device_name):
-    nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True, lookup_class=False)
-    for addr, name in nearby_devices:
-        if device_name == name:
-            return addr
-    return None
+def device_inquiry_with_rssi(sock):
+    # Set inquiry parameters
+    duration = 8  # ~10.24 seconds; 1.28 * 8
+    max_responses = 255
+    cmd_pkt = struct.pack("BBBBB", 0x33, 0x8b, 0x9e, duration, max_responses)
+    bluez.hci_send_cmd(sock, bluez.OGF_LINK_CTL, bluez.OCF_INQUIRY, cmd_pkt)
 
-def get_device_rssi(target_address):
-    # Create a Bluetooth socket and connect to the device
-    sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    # Process inquiry results
+    results = []
+    done = False
+    while not done:
+        pkt = sock.recv(255)
+        ptype, event, plen = struct.unpack("BBB", pkt[:3])
+        if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
+            pkt = pkt[3:]
+            nrsp = bluetooth.get_byte(pkt[0])
+            for i in range(nrsp):
+                addr = bluez.ba2str(pkt[1+6*i:1+6*i+6])
+                rssi = bluetooth.byte_to_signed_int(bluetooth.get_byte(pkt[1 + 13 * nrsp + i]))
+                results.append((addr, rssi))
+                print(f"Discovered: {addr}, RSSI: {rssi}")
+        elif event == bluez.EVT_INQUIRY_COMPLETE:
+            done = True
+
+    return results
+
+def main():
+    # Open Bluetooth device
+    dev_id = 0
     try:
-        sock.connect((target_address, 1))
-    except bluetooth.btcommon.BluetoothError as err:
-        print(f"Cannot connect to the Bluetooth device: {err}")
-        return None
+        sock = bluez.hci_open_dev(dev_id)
+    except:
+        print("Error accessing Bluetooth device.")
+        sys.exit(1)
 
-    # The RSSI can typically be read from the socket, but this is hardware and stack dependent
-    rssi = None
-    try:
-        rssi = sock.getsockopt(bluetooth.SOL_RFCOMM, bluetooth.RFCOMM_LM)
-    except Exception as e:
-        print(f"Error getting RSSI: {e}")
+    # Start device inquiry
+    print("Scanning for devices...")
+    device_inquiry_with_rssi(sock)
+    print("Scan complete.")
 
-    sock.close()
-    return rssi
-
-# Replace with the name of your Bluetooth device
-device_name = "WH-1000XM3"
-
-# Find the device by name
-device_address = find_device_address(device_name)
-if device_address is None:
-    print(f"Device {device_name} not found")
-    sys.exit(1)
-
-# Get the RSSI of the connected device
-rssi = get_device_rssi(device_address)
-if rssi is not None:
-    print(f"RSSI of the device {device_name} ({device_address}): {rssi}")
-else:
-    print("Could not read RSSI")
+if __name__ == "__main__":
+    main()
