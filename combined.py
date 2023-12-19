@@ -1,47 +1,52 @@
+#!/usr/bin/env python3
 import bluetooth
 import bluetooth._bluetooth as bluez
-import struct
+import time
 import sys
 
-def device_inquiry_with_rssi(sock):
-    # Set inquiry parameters
-    duration = 8  # ~10.24 seconds; 1.28 * 8
-    max_responses = 255
-    cmd_pkt = struct.pack("BBBBB", 0x33, 0x8b, 0x9e, duration, max_responses)
-    bluez.hci_send_cmd(sock, bluez.OGF_LINK_CTL, bluez.OCF_INQUIRY, cmd_pkt)
+def get_connected_devices(sock):
+    """Get a list of connected devices."""
+    connected_devices = []
+    max_rsp = 255
+    mode = 0
+    results, num_rsp = bluez.hci_inquiry(sock, length=8, max_rsp=max_rsp, flags=mode)
 
-    # Process inquiry results
-    results = []
-    done = False
-    while not done:
-        pkt = sock.recv(255)
-        ptype, event, plen = struct.unpack("BBB", pkt[:3])
-        if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
-            pkt = pkt[3:]
-            nrsp = bluetooth.get_byte(pkt[0])
-            for i in range(nrsp):
-                addr = bluez.ba2str(pkt[1+6*i:1+6*i+6])
-                rssi = bluetooth.byte_to_signed_int(bluetooth.get_byte(pkt[1 + 13 * nrsp + i]))
-                results.append((addr, rssi))
-                print(f"Discovered: {addr}, RSSI: {rssi}")
-        elif event == bluez.EVT_INQUIRY_COMPLETE:
-            done = True
+    for i in range(num_rsp):
+        addr = results[i][0]
+        name = bluetooth.lookup_name(addr)
+        connected_devices.append((addr, name))
+    
+    return connected_devices
 
-    return results
+def get_rssi(sock, addr):
+    """Get the RSSI of a specific connected device."""
+    try:
+        rssi = bluez.hci_read_rssi(sock, addr)
+    except Exception as e:
+        print("Could not read RSSI for", addr)
+        print(e)
+        return None
+    return rssi
 
 def main():
-    # Open Bluetooth device
     dev_id = 0
     try:
         sock = bluez.hci_open_dev(dev_id)
-    except:
-        print("Error accessing Bluetooth device.")
+        print("Bluetooth device opened successfully.")
+    except Exception as e:
+        print("Error accessing bluetooth device.")
+        print(e)
         sys.exit(1)
 
-    # Start device inquiry
-    print("Scanning for devices...")
-    device_inquiry_with_rssi(sock)
-    print("Scan complete.")
+    connected_devices = get_connected_devices(sock)
+    if not connected_devices:
+        print("No connected Bluetooth devices found.")
+        return
+
+    for addr, name in connected_devices:
+        rssi = get_rssi(sock, addr)
+        if rssi is not None:
+            print(f"Device: {name} ({addr}), RSSI: {rssi}")
 
 if __name__ == "__main__":
     main()
