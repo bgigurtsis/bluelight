@@ -1,23 +1,14 @@
 import asyncio
-from bleak import BleakClient
+from bleak import BleakScanner
 
-async def get_rssi(device_address):
-    async with BleakClient(device_address) as client:
-        is_connected = await client.is_connected()
-        if is_connected:
-            return client.last_rssi
-        else:
-            print("Failed to connect to the device.")
-            return None
+device_address = "C9:FA:4B:21:11:26"  # MAC address of Puck.js
 
-def main():
-    device_address = "C9:FA:4B:21:11:26"  # Hardcoded MAC address of Puck.js
-    rssi = asyncio.run(get_rssi(device_address))
+async def discover_device_rssi(address):
+    devices = await BleakScanner.discover()
+    for device in devices:
+        if device.address == address:
+            print(f"Device {device.address} RSSI: {device.rssi}")
+            return
+    print("Device not found.")
 
-    if rssi is not None:
-        print(f"Device {device_address} RSSI: {rssi}")
-    else:
-        print("RSSI could not be retrieved.")
-
-if __name__ == "__main__":
-    main()
+asyncio.run(discover_device_rssi(device_address))
