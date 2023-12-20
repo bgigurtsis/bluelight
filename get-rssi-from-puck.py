@@ -1,14 +1,20 @@
 import asyncio
 from bleak import BleakScanner
 
-device_address = "C9:FA:4B:21:11:26"  # MAC address of Puck.js
+async def run():
+    target_device_name = "Puck.js"
+    target_device_address = "C9:FA:4B:21:11:26"
+    while True:
+        devices = await BleakScanner.discover()
+        found = False
+        for d in devices:
+            if d.name == target_device_name or d.address == target_device_address:
+                print(f"Found {target_device_name}: Address={d.address}, RSSI={d.metadata['rssi']}")
+                found = True
+                break
+        if not found:
+            print(f"{target_device_name} not found.")
+        await asyncio.sleep(1)  # Delay in seconds before rescanning
 
-async def discover_device_rssi(address):
-    devices = await BleakScanner.discover()
-    for device in devices:
-        if device.address == address:
-            print(f"Device {device.address} RSSI: {device.rssi}")
-            return
-    print("Device not found.")
-
-asyncio.run(discover_device_rssi(device_address))
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run())
