@@ -1,22 +1,23 @@
-from bluepy.btle import Scanner
+import asyncio
+from bleak import BleakClient
 
-def get_rssi_from_scan(device_address):
-    scanner = Scanner()
-    devices = scanner.scan(10.0)  # Scanning for 10 seconds
-
-    for dev in devices:
-        if dev.addr == device_address:
-            return dev.rssi
-    return None
+async def get_rssi(device_address):
+    async with BleakClient(device_address) as client:
+        is_connected = await client.is_connected()
+        if is_connected:
+            return client.last_rssi
+        else:
+            print("Failed to connect to the device.")
+            return None
 
 def main():
-    device_address = "C9:FA:4B:21:11:26"  # Hardcoded MAC address of the Puck.js
-    rssi = get_rssi_from_scan(device_address)
+    device_address = "C9:FA:4B:21:11:26"  # Hardcoded MAC address of Puck.js
+    rssi = asyncio.run(get_rssi(device_address))
 
     if rssi is not None:
         print(f"Device {device_address} RSSI: {rssi}")
     else:
-        print("Puck.js not found.")
+        print("RSSI could not be retrieved.")
 
 if __name__ == "__main__":
     main()
