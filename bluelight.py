@@ -38,7 +38,7 @@ async def rssi_scanning():
                 latest_rssi = device.rssi
                 last_valid_rssi = latest_rssi  # Update the last valid RSSI
                 break
-        await asyncio.sleep(1)  # Increased delay
+        await asyncio.sleep(0.5)  # Increased delay
 
 def auto_control():
     """Automatically control LED based on Bluetooth beacon's RSSI."""
@@ -52,7 +52,7 @@ def auto_control():
             rssi_intensity = 0
 
         adjust_led_intensity(rssi_intensity)
-        time.sleep(0.2)  # Increased delay
+        time.sleep(0.1)  # Increased delay
 
 def start_async_loop(loop):
     """Starts the asynchronous event loop."""
