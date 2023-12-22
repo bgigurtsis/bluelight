@@ -46,7 +46,7 @@ def auto_control():
     while should_continue:
         rssi_value = latest_rssi if latest_rssi is not None else last_valid_rssi
         if rssi_value is not None:
-            rssi_intensity = map_value(rssi_value, -85, -40, 0, 1)
+            rssi_intensity = map_value(rssi_value, -85, -48, 0, 1)
             print(f"RSSI: {rssi_value}, Intensity: {rssi_intensity:.2f}")
         else:
             rssi_intensity = 0
