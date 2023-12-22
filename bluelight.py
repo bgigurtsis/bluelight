@@ -2,6 +2,7 @@ import asyncio
 import threading
 from gpiozero import PWMOutputDevice
 from bleak import BleakScanner
+import time
 
 # Set up the GPIO for the LED
 pin = PWMOutputDevice(18)
@@ -42,6 +43,11 @@ def auto_control():
 
         adjust_led_intensity(max(0, min(1, intensity)))
         time.sleep(0.1)
+
+def start_async_loop(loop):
+    """Starts the asynchronous event loop."""
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(rssi_scanning())
 
 def main():
     loop = asyncio.new_event_loop()
