@@ -7,20 +7,28 @@ import time
 # Set up the GPIO for the LED
 pin = PWMOutputDevice(18)
 
-# Default intensity when beacon is not detected (range 0 to 1)
-default_intensity = 0.0
+# Minimum and maximum intensities for visible light
+min_intensity = 0.05
+max_intensity = 1.0
 
-# Global variable to hold the latest RSSI value
+# Global variables
 latest_rssi = None
+last_valid_rssi = None  # Store the last valid RSSI
 should_continue = True
 
-def adjust_led_intensity(intensity):
+def map_value(x, in_min, in_max, out_min, out_max):
+    """Map a value from one range to another."""
+    x = max(min(x, in_max), in_min)
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+def adjust_led_intensity(rssi_intensity):
     """Adjust LED intensity based on the mapped value."""
-    pin.value = intensity
+    visible_intensity = max(min_intensity, min(max_intensity, rssi_intensity))
+    pin.value = visible_intensity
 
 async def rssi_scanning():
     """Asynchronous method to continuously scan for BLE devices and update RSSI."""
-    global latest_rssi, should_continue
+    global latest_rssi, last_valid_rssi, should_continue
     target_device_address = "C9:FA:4B:21:11:26"
 
     while should_continue:
@@ -28,21 +36,23 @@ async def rssi_scanning():
         for device in devices:
             if device.address == target_device_address:
                 latest_rssi = device.rssi
+                last_valid_rssi = latest_rssi  # Update the last valid RSSI
                 break
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(1)  # Increased delay
 
 def auto_control():
     """Automatically control LED based on Bluetooth beacon's RSSI."""
-    global latest_rssi, should_continue
+    global latest_rssi, last_valid_rssi, should_continue
     while should_continue:
-        intensity = default_intensity
-        if latest_rssi is not None:
-            # Modify this mapping as needed
-            intensity = (latest_rssi + 85) / (-40 + 85)
-            print(f"RSSI: {latest_rssi}, Intensity: {intensity:.2f}")
+        rssi_value = latest_rssi if latest_rssi is not None else last_valid_rssi
+        if rssi_value is not None:
+            rssi_intensity = map_value(rssi_value, -85, -40, 0, 1)
+            print(f"RSSI: {rssi_value}, Intensity: {rssi_intensity:.2f}")
+        else:
+            rssi_intensity = 0
 
-        adjust_led_intensity(max(0, min(1, intensity)))
-        time.sleep(0.1)
+        adjust_led_intensity(rssi_intensity)
+        time.sleep(0.2)  # Increased delay
 
 def start_async_loop(loop):
     """Starts the asynchronous event loop."""
@@ -59,12 +69,4 @@ def main():
 
     try:
         scan_thread.join()
-        control_thread.join()
-    except KeyboardInterrupt:
-        global should_continue
-        should_continue = False
-        scan_thread.join()
-        control_thread.join()
-
-if __name__ == "__main__":
-    main()
+        control_thread.join
