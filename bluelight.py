@@ -69,4 +69,12 @@ def main():
 
     try:
         scan_thread.join()
-        control_thread.join
+        control_thread.join()
+    except KeyboardInterrupt:
+        global should_continue
+        should_continue = False
+        scan_thread.join()
+        control_thread.join()
+
+if __name__ == "__main__":
+    main()
