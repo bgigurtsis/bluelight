@@ -43,18 +43,20 @@ def adjust_led_intensity(rssi_intensity, dampened_intensity):
         #print(f"LED {i+1}: RSSI = {rssi_intensity}, Base Intensity = {dampened_intensity:.2f}, Visible Intensity = {visible_intensity:.2f}")
 
 async def rssi_scanning():
-    """Asynchronous method to continuously scan for BLE devices and update RSSI."""
+    """Asynchronous method to continuously scan for a specific BLE device and update RSSI."""
     global latest_rssi, last_valid_rssi, should_continue
-    target_device_address = "C9:FA:4B:21:11:26"
+    target_device_address = "C9:FA:4B:21:11:26"  # Replace with your beacon's MAC address
 
     while should_continue:
-        devices = await BleakScanner.discover(timeout=1.0)  # Reduced timeout for quicker scanning
-        for device in devices:
-            if device.address == target_device_address:
-                latest_rssi = device.rssi
-                last_valid_rssi = latest_rssi
-                break
+        device = await BleakScanner.find_device_by_address(target_device_address, timeout=2.0)
+        if device:
+            latest_rssi = device.rssi
+            last_valid_rssi = latest_rssi  # Update the last valid RSSI
+        else:
+            print("Device not found. Retrying...")
+
         await asyncio.sleep(0.1)  # Reduced sleep for more frequent updates
+
 
 
 def auto_control():
