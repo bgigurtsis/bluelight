@@ -40,7 +40,7 @@ def adjust_led_intensity(rssi_intensity, dampened_intensity):
         fluctuation = get_intensity_fluctuation(dampened_intensity)
         visible_intensity = max(min_intensity, min(max_intensity, dampened_intensity + fluctuation))
         led.value = visible_intensity
-        print(f"LED {i+1}: RSSI = {rssi_intensity}, Base Intensity = {dampened_intensity:.2f}, Visible Intensity = {visible_intensity:.2f}")
+        #print(f"LED {i+1}: RSSI = {rssi_intensity}, Base Intensity = {dampened_intensity:.2f}, Visible Intensity = {visible_intensity:.2f}")
 
 async def rssi_scanning():
     """Asynchronous method to continuously scan for BLE devices and update RSSI."""
