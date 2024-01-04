@@ -6,7 +6,7 @@ import time
 import random
 
 # Set up the GPIO for the LEDs
-led_pins = [18, 19, 20]
+led_pins = [15, 18, 19]
 leds = [PWMOutputDevice(pin) for pin in led_pins]
 
 # Minimum and maximum RSSI values for mapping
