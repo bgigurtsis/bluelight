@@ -6,15 +6,19 @@ import time
 import random
 
 # Set up the GPIO for the LEDs
-led_pins = [15, 18, 19]
+led_pins = [18, 19, 20]
 leds = [PWMOutputDevice(pin) for pin in led_pins]
 
+# Minimum and maximum RSSI values for mapping
+rssi_min = -90
+rssi_max = -50
+
 # Minimum and maximum intensities for visible light
-min_intensity = 0.05
+min_intensity = 0.0
 max_intensity = 1.0
 
-# Range for random intensity fluctuation
-intensity_fluctuation_range = 0.1
+# Range for random intensity fluctuation (make it subtle)
+intensity_fluctuation_range = 0.05
 
 # Global variables
 latest_rssi = None
@@ -23,11 +27,11 @@ should_continue = True
 
 def map_value(x, in_min, in_max, out_min, out_max):
     """Map a value from one range to another."""
-    return max(min(max(min(x, in_max), in_min), out_max), out_min)
+    return max(min((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min, out_max), out_min)
 
 def adjust_led_intensity(rssi_intensity):
     """Adjust LED intensity for all LEDs based on the mapped value with random fluctuation."""
-    base_intensity = map_value(rssi_intensity, min_intensity, max_intensity, 0, 1)
+    base_intensity = map_value(rssi_intensity, rssi_min, rssi_max, min_intensity, max_intensity)
     for led in leds:
         # Add random fluctuation to the base intensity
         fluctuation = random.uniform(-intensity_fluctuation_range, intensity_fluctuation_range)
@@ -51,14 +55,17 @@ async def rssi_scanning():
 def auto_control():
     """Automatically control LEDs based on Bluetooth beacon's RSSI."""
     global latest_rssi, last_valid_rssi, should_continue
+    previous_intensity = 0
     while should_continue:
         rssi_value = latest_rssi if latest_rssi is not None else last_valid_rssi
         if rssi_value is not None:
-            rssi_intensity = map_value(rssi_value, -85, -48, 0, 1)
-            print(f"RSSI: {rssi_value}, Intensity: {rssi_intensity:.2f}")
-            adjust_led_intensity(rssi_intensity)
+            rssi_intensity = map_value(rssi_value, rssi_min, rssi_max, min_intensity, max_intensity)
+            # Dampen the intensity change to reduce flashing
+            dampened_intensity = previous_intensity * 0.7 + rssi_intensity * 0.3
+            previous_intensity = dampened_intensity
+            adjust_led_intensity(dampened_intensity)
         else:
-            adjust_led_intensity(0)
+            adjust_led_intensity(min_intensity)
         time.sleep(0.1)  # Adjust for desired responsiveness
 
 def start_async_loop(loop):
