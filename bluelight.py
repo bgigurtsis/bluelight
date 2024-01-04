@@ -10,7 +10,7 @@ led_pins = [18, 19, 15]
 leds = [PWMOutputDevice(pin) for pin in led_pins]
 
 # Minimum and maximum RSSI values for mapping
-rssi_min = -75
+rssi_min = -80
 rssi_max = -50
 
 # Minimum and maximum intensities for visible light
@@ -48,13 +48,14 @@ async def rssi_scanning():
     target_device_address = "C9:FA:4B:21:11:26"
 
     while should_continue:
-        devices = await BleakScanner.discover(timeout=2.0)
+        devices = await BleakScanner.discover(timeout=1.0)  # Reduced timeout for quicker scanning
         for device in devices:
             if device.address == target_device_address:
                 latest_rssi = device.rssi
-                last_valid_rssi = latest_rssi  # Update the last valid RSSI
+                last_valid_rssi = latest_rssi
                 break
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)  # Reduced sleep for more frequent updates
+
 
 def auto_control():
     """Automatically control LEDs based on Bluetooth beacon's RSSI."""
