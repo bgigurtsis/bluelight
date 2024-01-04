@@ -6,7 +6,7 @@ import time
 import random
 
 # Set up the GPIO for the LEDs
-led_pins = [15, 18, 19]
+led_pins = [18, 19, 15]
 leds = [PWMOutputDevice(pin) for pin in led_pins]
 
 # Minimum and maximum RSSI values for mapping
@@ -29,14 +29,14 @@ def map_value(x, in_min, in_max, out_min, out_max):
     """Map a value from one range to another."""
     return max(min((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min, out_max), out_min)
 
-def adjust_led_intensity(rssi_intensity):
+def adjust_led_intensity(rssi_intensity, dampened_intensity):
     """Adjust LED intensity for all LEDs based on the mapped value with random fluctuation."""
-    base_intensity = map_value(rssi_intensity, rssi_min, rssi_max, min_intensity, max_intensity)
-    for led in leds:
+    for i, led in enumerate(leds):
         # Add random fluctuation to the base intensity
         fluctuation = random.uniform(-intensity_fluctuation_range, intensity_fluctuation_range)
-        visible_intensity = max(min_intensity, min(max_intensity, base_intensity + fluctuation))
+        visible_intensity = max(min_intensity, min(max_intensity, dampened_intensity + fluctuation))
         led.value = visible_intensity
+        print(f"LED {i+1}: RSSI = {rssi_intensity}, Base Intensity = {dampened_intensity:.2f}, Visible Intensity = {visible_intensity:.2f}")
 
 async def rssi_scanning():
     """Asynchronous method to continuously scan for BLE devices and update RSSI."""
@@ -63,9 +63,10 @@ def auto_control():
             # Dampen the intensity change to reduce flashing
             dampened_intensity = previous_intensity * 0.7 + rssi_intensity * 0.3
             previous_intensity = dampened_intensity
-            adjust_led_intensity(dampened_intensity)
+            print(f"RSSI: {rssi_value}, Mapped Intensity: {rssi_intensity:.2f}, Dampened Intensity: {dampened_intensity:.2f}")
+            adjust_led_intensity(rssi_value, dampened_intensity)
         else:
-            adjust_led_intensity(min_intensity)
+            adjust_led_intensity(min_intensity, min_intensity)
         time.sleep(0.1)  # Adjust for desired responsiveness
 
 def start_async_loop(loop):
