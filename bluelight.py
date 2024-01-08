@@ -26,19 +26,19 @@ def map_value(x, in_min, in_max, out_min, out_max):
     """Map a value from one range to another."""
     return max(min((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min, out_max), out_min)
 
-def get_intensity_fluctuation(rssi_intensity, base_intensity):
+def get_intensity_fluctuation(rssi_intensity):
     """Get the intensity fluctuation based on RSSI."""
-    if rssi_intensity > 0.7:  # Consider high RSSI for noticeable fluctuation
-        # Fluctuate more significantly for stronger signals
-        return random.uniform(-base_intensity * 0.5, base_intensity * 0.5)
+    # More fluctuation when the intensity is very high or very low
+    if rssi_intensity > 0.8 or rssi_intensity < 0.2:
+        return random.uniform(0, 0.1)
     else:
-        # Less fluctuation for weaker signals
-        return random.uniform(-base_intensity * 0.1, base_intensity * 0.1)
+        # Minimal fluctuation for mid-range intensities
+        return random.uniform(0, 0.02)
 
 def adjust_led_intensity(rssi_intensity, dampened_intensity):
     """Adjust LED intensity for all LEDs based on the mapped value with random fluctuation."""
     for i, led in enumerate(leds):
-        fluctuation = get_intensity_fluctuation(rssi_intensity, dampened_intensity)
+        fluctuation = get_intensity_fluctuation(dampened_intensity)
         visible_intensity = max(min_intensity, min(max_intensity, dampened_intensity + fluctuation))
         led.value = visible_intensity
 
@@ -68,6 +68,7 @@ def auto_control():
             dampened_intensity = previous_intensity * 0.7 + rssi_intensity * 0.3
             previous_intensity = dampened_intensity
             adjust_led_intensity(rssi_intensity, dampened_intensity)
+            print(f"RSSI: {rssi_value}, Mapped Intensity: {rssi_intensity:.2f}, Dampened Intensity: {dampened_intensity:.2f}, Visible Intensity: {max(min_intensity, min(max_intensity, dampened_intensity + get_intensity_fluctuation(dampened_intensity))):.2f}")
         time.sleep(0.05)  # Adjust for desired responsiveness
 
 def start_async_loop(loop):
