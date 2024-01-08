@@ -30,7 +30,7 @@ def get_intensity_fluctuation(rssi_intensity):
     """Get the intensity fluctuation based on RSSI."""
     # More fluctuation when the intensity is high or very high, less when moderate
     if rssi_intensity > 0.8 or rssi_intensity < 0.2:
-        return random.uniform(0, 0.1)
+        return random.uniform(0, 0.5)
     else:
         return random.uniform(0, 0.02)
 
