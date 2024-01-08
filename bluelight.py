@@ -45,10 +45,10 @@ def adjust_led_intensity(rssi_intensity, dampened_intensity):
 async def rssi_scanning():
     """Asynchronous method to continuously scan for a specific BLE device and update RSSI."""
     global latest_rssi, last_valid_rssi, should_continue
-    target_device_address = "C9:FA:4B:21:11:26"  # Replace with your beacon's MAC address
+    target_device_address = "CA:07:23:23:7C:D1"  # Replace with your beacon's MAC address
 
     while should_continue:
-        device = await BleakScanner.find_device_by_address(target_device_address, timeout=2.0)
+        device = await BleakScanner.find_device_by_address(target_device_address, timeout=1.0)
         if device:
             latest_rssi = device.rssi
             last_valid_rssi = latest_rssi  # Update the last valid RSSI
