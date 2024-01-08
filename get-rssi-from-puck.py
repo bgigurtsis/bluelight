@@ -2,7 +2,7 @@ import asyncio
 from bleak import BleakScanner
 
 async def run():
-    target_device_name = "DD"
+    target_device_name = "Puck.js"
     target_device_address = "C9:FA:4B:21:11:26"
 
     while True:
