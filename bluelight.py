@@ -68,7 +68,7 @@ def auto_control():
             dampened_intensity = previous_intensity * 0.7 + rssi_intensity * 0.3
             previous_intensity = dampened_intensity
             adjust_led_intensity(rssi_intensity, dampened_intensity)
-            print(f"RSSI: {rssi_value}, Mapped Intensity: {rssi_intensity:.2f}, Dampened Intensity: {dampened_intensity:.2f}, Visible Intensity: {max(min_intensity, min(max_intensity, dampened_intensity + get_intensity_fluctuation(dampened_intensity))):.2f}")
+            print(f"RSSI: {rssi_value}, Mapped Intensity: {rssi_intensity:.2f}, Visible Intensity: {max(min_intensity, min(max_intensity, dampened_intensity + get_intensity_fluctuation(dampened_intensity))):.2f}")
         time.sleep(0.05)  # Adjust for desired responsiveness
 
 def start_async_loop(loop):
