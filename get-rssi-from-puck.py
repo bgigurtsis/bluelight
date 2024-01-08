@@ -3,7 +3,7 @@ from bleak import BleakScanner
 
 async def run():
     target_device_name = "DD"
-    target_device_address = "CA:07:23:23:7C:D1"
+    target_device_address = "C9:FA:4B:21:11:26"
 
     while True:
         discovered = await BleakScanner.discover(timeout=1, return_adv=True)
