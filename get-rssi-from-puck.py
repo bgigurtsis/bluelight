@@ -15,7 +15,6 @@ async def run():
         else:
             print(f"{target_device_name} not found.")
 
-        await asyncio.sleep(1)  # Delay before rescanning
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run())
