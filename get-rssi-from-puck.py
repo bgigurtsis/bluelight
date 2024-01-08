@@ -6,7 +6,7 @@ async def run():
     target_device_address = "CA:07:23:23:7C:D1"
 
     while True:
-        discovered = await BleakScanner.discover(timeout=0.1, return_adv=True)
+        discovered = await BleakScanner.discover(timeout=1, return_adv=True)
         for address, (device, advertisement_data) in discovered.items():
             if device.name == target_device_name or device.address == target_device_address:
                 rssi = advertisement_data.rssi
