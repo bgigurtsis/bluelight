@@ -10,8 +10,8 @@ led_pins = [18, 19, 15]
 leds = [PWMOutputDevice(pin) for pin in led_pins]
 
 # Minimum and maximum RSSI values for mapping
-rssi_min = -60
-rssi_max = -40
+rssi_min = -57
+rssi_max = -43
 
 # Minimum and maximum intensities for visible light
 min_intensity = 0.0
