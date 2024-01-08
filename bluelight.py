@@ -28,8 +28,8 @@ def map_value(x, in_min, in_max, out_min, out_max):
 
 def get_intensity_fluctuation(rssi_intensity):
     """Get the intensity fluctuation based on RSSI."""
-    # More fluctuation when the intensity is high, less when low
-    if rssi_intensity > 0.8:
+    # More fluctuation when the intensity is high or very high, less when moderate
+    if rssi_intensity > 0.8 or rssi_intensity < 0.2:
         return random.uniform(0, 0.1)
     else:
         return random.uniform(0, 0.02)
@@ -56,8 +56,6 @@ async def rssi_scanning():
             print("Device not found. Retrying...")
 
         await asyncio.sleep(0.1)  # Reduced sleep for more frequent updates
-
-
 
 def auto_control():
     """Automatically control LEDs based on Bluetooth beacon's RSSI."""
