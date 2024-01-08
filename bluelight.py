@@ -26,21 +26,21 @@ def map_value(x, in_min, in_max, out_min, out_max):
     """Map a value from one range to another."""
     return max(min((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min, out_max), out_min)
 
-def get_intensity_fluctuation(rssi_intensity):
+def get_intensity_fluctuation(rssi_intensity, base_intensity):
     """Get the intensity fluctuation based on RSSI."""
-    # More fluctuation when the intensity is high or very high, less when moderate
-    if rssi_intensity > 0.8 or rssi_intensity < 0.2:
-        return random.uniform(0, 0.5)
+    if rssi_intensity > 0.7:  # Consider high RSSI for noticeable fluctuation
+        # Fluctuate more significantly for stronger signals
+        return random.uniform(-base_intensity * 0.5, base_intensity * 0.5)
     else:
-        return random.uniform(0, 0.02)
+        # Less fluctuation for weaker signals
+        return random.uniform(-base_intensity * 0.1, base_intensity * 0.1)
 
 def adjust_led_intensity(rssi_intensity, dampened_intensity):
     """Adjust LED intensity for all LEDs based on the mapped value with random fluctuation."""
     for i, led in enumerate(leds):
-        fluctuation = get_intensity_fluctuation(dampened_intensity)
+        fluctuation = get_intensity_fluctuation(rssi_intensity, dampened_intensity)
         visible_intensity = max(min_intensity, min(max_intensity, dampened_intensity + fluctuation))
         led.value = visible_intensity
-        #print(f"LED {i+1}: RSSI = {rssi_intensity}, Base Intensity = {dampened_intensity:.2f}, Visible Intensity = {visible_intensity:.2f}")
 
 async def rssi_scanning():
     """Asynchronous method to continuously scan for a specific BLE device and update RSSI."""
@@ -62,16 +62,12 @@ def auto_control():
     global latest_rssi, last_valid_rssi, should_continue
     previous_intensity = 0
     while should_continue:
-        # Use the latest RSSI value, or the last valid RSSI if no new value is available
         rssi_value = latest_rssi if latest_rssi is not None else last_valid_rssi
         if rssi_value is not None:
-            # Map the RSSI value to the intensity
             rssi_intensity = map_value(rssi_value, rssi_min, rssi_max, min_intensity, max_intensity)
-            # Dampen the intensity change to reduce abrupt changes
             dampened_intensity = previous_intensity * 0.7 + rssi_intensity * 0.3
             previous_intensity = dampened_intensity
-            print(f"RSSI: {rssi_value}, Mapped Intensity: {rssi_intensity:.2f}, Dampened Intensity: {dampened_intensity:.2f}")
-            adjust_led_intensity(rssi_value, dampened_intensity)
+            adjust_led_intensity(rssi_intensity, dampened_intensity)
         time.sleep(0.05)  # Adjust for desired responsiveness
 
 def start_async_loop(loop):
