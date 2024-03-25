@@ -10,4 +10,4 @@ The hardware for Bluelight consists of:
 
 For setup of bluelight.py just replace the MAC address in the script with the MAC address of your bluetooth beacon.
 
-All files in this repo are licensed with the GPL v2.0 license, and non-commercial and commercial re-use/modification is allowed so long as attribution is maintained. 
+All files in this repo are licensed with the GPL v2.0 license, and non-commercial and commercial re-use/modification is allowed so long as attribution and the GPL 2.0 license is maintained.
